@@ -14,3 +14,8 @@ target/
 /.classpath
 /.settings/
 /.project
+
+
+.settings/
+.classpath
+.project
