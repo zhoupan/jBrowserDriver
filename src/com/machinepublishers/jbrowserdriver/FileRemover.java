@@ -21,15 +21,19 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 class FileRemover extends Thread {
-  private final File toDelete;
+ private final File toDelete;
 
-  FileRemover(File toDelete) {
-    this.toDelete = toDelete;
-  }
+ FileRemover(File toDelete) {
+  this.toDelete = toDelete;
+ }
 
-  @Override
-  public void run() {
-    FileUtils.deleteQuietly(toDelete);
-  }
+ @Override
+ public void run() {
+  log.debug("deleteQuietly:{}", toDelete);
+  FileUtils.deleteQuietly(toDelete);
+ }
 }

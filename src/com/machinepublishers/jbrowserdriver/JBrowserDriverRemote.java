@@ -28,97 +28,97 @@ import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriverException;
 
 interface JBrowserDriverRemote extends Remote {
-  void setUp(final Settings settings) throws RemoteException;
+ void setUp(final Settings settings);
 
-  void storeCapabilities(Capabilities capabilities) throws RemoteException;
+ void storeCapabilities(Capabilities capabilities) throws RemoteException;
 
-  void init() throws RemoteException;
+ void init() throws RemoteException;
 
-  void reset(Settings settings) throws RemoteException;
+ void reset(Settings settings) throws RemoteException;
 
-  void reset() throws RemoteException;
+ void reset() throws RemoteException;
 
-  int getStatusCode() throws RemoteException;
+ int getStatusCode() throws RemoteException;
 
-  void pageWait() throws RemoteException;
+ void pageWait() throws RemoteException;
 
-  void kill() throws RemoteException;
+ void kill() throws RemoteException;
 
-  byte[] getScreenshot() throws WebDriverException, RemoteException;
+ byte[] getScreenshot() throws WebDriverException, RemoteException;
 
-  Capabilities getCapabilities() throws RemoteException;
+ Capabilities getCapabilities() throws RemoteException;
 
-  KeyboardRemote getKeyboard() throws RemoteException;
+ KeyboardRemote getKeyboard() throws RemoteException;
 
-  MouseRemote getMouse() throws RemoteException;
+ MouseRemote getMouse() throws RemoteException;
 
-  ElementRemote findElementByXPath(String using) throws RemoteException;
+ ElementRemote findElementByXPath(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByXPath(String using) throws RemoteException;
+ List<ElementRemote> findElementsByXPath(String using) throws RemoteException;
 
-  ElementRemote findElementByTagName(String using) throws RemoteException;
+ ElementRemote findElementByTagName(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByTagName(String using) throws RemoteException;
+ List<ElementRemote> findElementsByTagName(String using) throws RemoteException;
 
-  ElementRemote findElementByCssSelector(String using) throws RemoteException;
+ ElementRemote findElementByCssSelector(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByCssSelector(String using) throws RemoteException;
+ List<ElementRemote> findElementsByCssSelector(String using) throws RemoteException;
 
-  ElementRemote findElementByName(String using) throws RemoteException;
+ ElementRemote findElementByName(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByName(String using) throws RemoteException;
+ List<ElementRemote> findElementsByName(String using) throws RemoteException;
 
-  ElementRemote findElementByLinkText(String using) throws RemoteException;
+ ElementRemote findElementByLinkText(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByLinkText(String using) throws RemoteException;
+ List<ElementRemote> findElementsByLinkText(String using) throws RemoteException;
 
-  ElementRemote findElementByPartialLinkText(String using) throws RemoteException;
+ ElementRemote findElementByPartialLinkText(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByPartialLinkText(String using) throws RemoteException;
+ List<ElementRemote> findElementsByPartialLinkText(String using) throws RemoteException;
 
-  ElementRemote findElementByClassName(String using) throws RemoteException;
+ ElementRemote findElementByClassName(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsByClassName(String using) throws RemoteException;
+ List<ElementRemote> findElementsByClassName(String using) throws RemoteException;
 
-  ElementRemote findElementById(String using) throws RemoteException;
+ ElementRemote findElementById(String using) throws RemoteException;
 
-  List<ElementRemote> findElementsById(String using) throws RemoteException;
+ List<ElementRemote> findElementsById(String using) throws RemoteException;
 
-  Object executeScript(String script, Object... args) throws RemoteException;
+ Object executeScript(String script, Object... args) throws RemoteException;
 
-  Object executeAsyncScript(String script, Object... args) throws RemoteException;
+ Object executeAsyncScript(String script, Object... args) throws RemoteException;
 
-  void get(String url) throws RemoteException;
+ void get(String url) throws RemoteException;
 
-  String getCurrentUrl() throws RemoteException;
+ String getCurrentUrl() throws RemoteException;
 
-  String getTitle() throws RemoteException;
+ String getTitle() throws RemoteException;
 
-  List<ElementRemote> findElements(By by) throws RemoteException;
+ List<ElementRemote> findElements(By by) throws RemoteException;
 
-  ElementRemote findElement(By by) throws RemoteException;
+ ElementRemote findElement(By by) throws RemoteException;
 
-  String getPageSource() throws RemoteException;
+ String getPageSource() throws RemoteException;
 
-  void close() throws RemoteException;
+ void close() throws RemoteException;
 
-  void quit() throws RemoteException;
+ void quit() throws RemoteException;
 
-  Set<String> getWindowHandles() throws RemoteException;
+ Set<String> getWindowHandles() throws RemoteException;
 
-  String getWindowHandle() throws RemoteException;
+ String getWindowHandle() throws RemoteException;
 
-  TargetLocatorRemote switchTo() throws RemoteException;
+ TargetLocatorRemote switchTo() throws RemoteException;
 
-  NavigationRemote navigate() throws RemoteException;
+ NavigationRemote navigate() throws RemoteException;
 
-  OptionsRemote manage() throws RemoteException;
+ OptionsRemote manage() throws RemoteException;
 
-  LogsRemote logs() throws RemoteException;
+ LogsRemote logs() throws RemoteException;
 
-  File cacheDir() throws RemoteException;
+ File cacheDir() throws RemoteException;
 
-  File attachmentsDir() throws RemoteException;
+ File attachmentsDir() throws RemoteException;
 
-  File mediaDir() throws RemoteException;
+ File mediaDir() throws RemoteException;
 }

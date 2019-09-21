@@ -17,13 +17,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
+class RemoteObject {
 
-class RemoteObject extends UnicastRemoteObject {
-
-  protected RemoteObject() throws RemoteException {
-    super(JBrowserDriverServer.childPort(),
-        JBrowserDriverServer.socketFactory(), JBrowserDriverServer.socketFactory());
-  }
 }
