@@ -18,18 +18,11 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -40,15 +33,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.jar.Attributes;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Cookie;
@@ -70,7 +56,6 @@ import org.zeroturnaround.process.Processes;
 import com.google.common.collect.ImmutableMap;
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
-import io.github.classgraph.ClassGraph;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -85,8 +70,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JBrowserDriver extends RemoteWebDriver {
 
- // TODO handle jbd.fork=false
-
  /**
   * This can be passed to sendKeys to delete all the text in a text field.
   * 
@@ -100,94 +83,6 @@ public class JBrowserDriver extends RemoteWebDriver {
  private static final Set<SocketLock> locks = new HashSet<SocketLock>();
  private static final Set<Job> waiting = new LinkedHashSet<Job>();
  private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
- private static final String JAVA_BIN;
- private static final List<String> inheritedArgs;
- private static volatile List<String> classpathSimpleArgs;
- private static volatile List<String> classpathUnpackedArgs;
- private static final AtomicReference<List<String>> classpathArgs = new AtomicReference<>();
- private static final AtomicBoolean firstLaunch = new AtomicBoolean(true);
- private static final Set<String> filteredLogs = Collections
-  .unmodifiableSet(new HashSet<String>(Arrays.asList(new String[] { "Warning: Single GUI Threadiong is enabled, FPS should be slower" })));
- private static final AtomicLong sessionIdCounter = new AtomicLong();
-
- static {
-  List<String> inheritedArgsTmp = new ArrayList<String>();
-  File javaBin = new File(System.getProperty("java.home") + "/bin/java");
-  if (!javaBin.exists()) {
-   javaBin = new File(javaBin.getAbsolutePath() + ".exe");
-  }
-  JAVA_BIN = javaBin.getAbsolutePath();
-  try {
-   for (Object keyObj : System.getProperties().keySet()) {
-    String key = keyObj.toString();
-    if (key != null && key.startsWith("jbd.rmi.")) {
-     inheritedArgsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
-    }
-   }
-  } catch (Throwable t) {
-   Util.handleException(t);
-  }
-  inheritedArgs = Collections.unmodifiableList(inheritedArgsTmp);
-
- }
-
- private static void initClasspath() {
-  log.debug("initClasspath");
-  List<String> classpathSimpleTmp = new ArrayList<String>();
-  List<String> classpathUnpackedTmp = new ArrayList<String>();
-  try {
-   List<File> classpathElements = new ClassGraph().getClasspathFiles();
-   final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
-   log.debug("classpathDir:{}", classpathDir);
-   Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
-   List<String> pathsSimple = new ArrayList<String>();
-   List<String> pathsUnpacked = new ArrayList<String>();
-   for (File curElement : classpathElements) {
-    String rootLevelElement = curElement.getAbsoluteFile().toURI().toURL().toExternalForm();
-    pathsSimple.add(rootLevelElement);
-    pathsUnpacked.add(rootLevelElement);
-    if (curElement.isFile() && curElement.getPath().endsWith(".jar")) {
-     try (ZipFile jar = new ZipFile(curElement)) {
-      Enumeration<? extends ZipEntry> entries = jar.entries();
-      while (entries.hasMoreElements()) {
-       ZipEntry entry = entries.nextElement();
-       if (entry.getName().endsWith(".jar")) {
-        try (InputStream in = jar.getInputStream(entry)) {
-         File childJar = new File(classpathDir, Util.randomFileName() + ".jar");
-         log.debug("copy {} to {}", curElement, childJar);
-         Files.copy(in, childJar.toPath());
-         pathsUnpacked.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
-         childJar.deleteOnExit();
-        }
-       }
-      }
-     }
-    }
-   }
-   classpathSimpleTmp = createClasspathJar(classpathDir, "classpath-simple.jar", pathsSimple);
-   classpathUnpackedTmp = createClasspathJar(classpathDir, "classpath-unpacked.jar", pathsUnpacked);
-  } catch (Throwable t) {
-   Util.handleException(t);
-  }
-  classpathSimpleArgs = Collections.unmodifiableList(classpathSimpleTmp);
-  classpathUnpackedArgs = Collections.unmodifiableList(classpathUnpackedTmp);
-  log.debug("classpathSimpleArgs:{}", classpathSimpleArgs);
-  log.debug("classpathUnpackedArgs:{}", classpathUnpackedArgs);
- }
-
- private static List<String> createClasspathJar(File dir, String jarName, List<String> manifestClasspath) throws IOException {
-  List<String> classpathArgs = new ArrayList<String>();
-  Manifest manifest = new Manifest();
-  manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-  manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, StringUtils.join(manifestClasspath, ' '));
-  File classpathJar = new File(dir, jarName);
-  classpathJar.deleteOnExit();
-  try (JarOutputStream stream = new JarOutputStream(new FileOutputStream(classpathJar), manifest)) {
-  }
-  classpathArgs.add("-classpath");
-  classpathArgs.add(classpathJar.getCanonicalPath());
-  return classpathArgs;
- }
 
  public static void initWorkThread() {
   log.debug("initWorkThread");
@@ -245,16 +140,15 @@ public class JBrowserDriver extends RemoteWebDriver {
   return Test.run();
  }
 
- private final JBrowserDriverRemote remote;
- private final Logs logs;
- private final AtomicReference<Process> process = new AtomicReference<Process>();
- private final AtomicBoolean processEnded = new AtomicBoolean();
- private final AtomicReference<PortGroup> configuredPortGroup = new AtomicReference<PortGroup>();
- private final AtomicReference<PortGroup> actualPortGroup = new AtomicReference<PortGroup>();
- private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
- private final SessionId sessionId = new SessionId(UUID.randomUUID());
- private final SocketLock lock = new SocketLock();
- private final Thread heartbeatThread;
+ private JBrowserDriverRemote remote;
+ private Logs logs;
+ private AtomicReference<Process> process = new AtomicReference<Process>();
+ private AtomicBoolean processEnded = new AtomicBoolean();
+ private AtomicReference<PortGroup> configuredPortGroup = new AtomicReference<PortGroup>();
+ private AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
+ private SessionId sessionId = new SessionId(UUID.randomUUID());
+ private SocketLock lock = new SocketLock();
+ private Thread heartbeatThread;
 
  /**
   * Constructs a browser with default settings, UTC timezone, and no proxy.
@@ -273,7 +167,7 @@ public class JBrowserDriver extends RemoteWebDriver {
   */
  public JBrowserDriver(Capabilities capabilities) {
   this(Settings.builder().build(capabilities));
-  Map capabilitiesMap = new HashMap(capabilities.asMap());
+  Map<String, Object> capabilitiesMap = new HashMap<>(capabilities.asMap());
   capabilitiesMap.remove("proxy");
   try {
    synchronized (lock.validated()) {
@@ -295,6 +189,10 @@ public class JBrowserDriver extends RemoteWebDriver {
   return server;
  }
 
+ private JBrowserDriverServer driverServer;
+
+ private HeartbeatServer heartbeatServer;
+
  /**
   * Use {@link Settings#builder()} ...build() to create settings to pass to this
   * constructor.
@@ -302,20 +200,17 @@ public class JBrowserDriver extends RemoteWebDriver {
   * @param settings
   */
  public JBrowserDriver(final Settings settings) {
-
-  HeartbeatRemote heartbeatTmp = null;
-  JBrowserDriverRemote instanceTmp = null;
-  heartbeatTmp = new HeartbeatServer();
-  instanceTmp = this.onBuildJBrowserDriverServer();
-  instanceTmp.setUp(settings);
-  final HeartbeatRemote heartbeat = heartbeatTmp;
+  this.heartbeatServer = new HeartbeatServer();
+  this.driverServer = this.onBuildJBrowserDriverServer();
+  this.driverServer.setUp(settings);
+  this.remote = this.driverServer;
   heartbeatThread = new Thread(() -> {
    while (true) {
     if (processEnded.get()) {
      return;
     }
     try {
-     heartbeat.heartbeat();
+     this.heartbeatServer.heartbeat();
     } catch (RemoteException e) {
     }
     try {
@@ -326,11 +221,10 @@ public class JBrowserDriver extends RemoteWebDriver {
   });
   heartbeatThread.setName("Heartbeat");
   heartbeatThread.start();
-  remote = instanceTmp;
   LogsRemote logsRemote = null;
   try {
    synchronized (lock.validated()) {
-    logsRemote = remote.logs();
+    logsRemote = this.driverServer.logs();
    }
   } catch (Throwable t) {
    Util.handleException(t);

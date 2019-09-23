@@ -19,6 +19,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.StringWriter;
+import java.net.CookieHandler;
 import java.net.URL;
 import java.rmi.registry.Registry;
 import java.util.List;
@@ -58,18 +59,24 @@ import com.sun.webkit.network.CookieManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote, WebDriver, JavascriptExecutor, FindsById, FindsByClassName,
- FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot {
+
+public class JBrowserDriverServer extends RemoteObject
+ implements JBrowserDriverRemote, WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
+ FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot {
  private static final AtomicInteger childPort = new AtomicInteger();
  private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
  private static Registry registry;
+
+ private Settings settings;
 
  public void onConfigStreamHandler() {
   URL.setURLStreamHandlerFactory(new StreamHandler());
  }
 
+ private CookieHandler cookieStore = new CookieStore();
+
  public void onConfigCookieStore() {
-  CookieManager.setDefault(new CookieStore());
+  CookieManager.setDefault(this.cookieStore);
  }
 
  final AtomicReference<Context> context = new AtomicReference<Context>();
@@ -80,6 +87,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
 
  @Override
  public void setUp(final Settings settings) {
+  this.settings = settings;
   SettingsManager.register(settings);
   context.set(new Context());
  }

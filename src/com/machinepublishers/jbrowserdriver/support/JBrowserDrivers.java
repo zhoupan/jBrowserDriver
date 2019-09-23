@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+import com.machinepublishers.jbrowserdriver.Settings;
 
 /**
  * The Class JBrowserDrivers.
@@ -15,6 +16,8 @@ public class JBrowserDrivers {
 
  /** The cache. */
  Map<Object, JBrowserDriver> cache = new java.util.concurrent.ConcurrentHashMap<>();
+
+ JBrowserSupport support = new JBrowserSupport();
 
  /**
   * Gets the.
@@ -33,6 +36,33 @@ public class JBrowserDrivers {
    }
    return value;
   }
+ }
+
+ /**
+  * Gets the.
+  *
+  * @param key     the key
+  * @param builder the builder
+  * @return the j browser driver
+  */
+ public JBrowserDriver get(Object key, Settings.Builder builder) {
+  return this.get(key, new Supplier<JBrowserDriver>() {
+
+   @Override
+   public JBrowserDriver get() {
+    return new JBrowserDriver(builder.build());
+   }
+  });
+ }
+
+ /**
+  * Gets the.
+  *
+  * @param key the key
+  * @return the j browser driver
+  */
+ public JBrowserDriver get(Object key) {
+  return this.get(key, this.support.settingsBuilder);
  }
 
  /**
